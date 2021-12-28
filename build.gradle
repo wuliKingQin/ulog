@@ -4,6 +4,7 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
     dependencies {
         classpath "com.android.tools.build:gradle:4.2.1"
@@ -40,6 +41,7 @@ allprojects {
                 "okio"            : "com.squareup.okio:okio:1.15.0",
                 "gson"            : "com.google.code.gson:gson:2.8.5",
                 "work-runtime"    : "androidx.work:work-runtime-ktx:2.1.0",
+                "ulog"            : "com.gitee.wuliKingQin:ulog:v0.0.1-beta"
         ]
     }
 }

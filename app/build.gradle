@@ -47,5 +47,6 @@ dependencies {
     implementation rootProject.ext.dependencies['espresso-core']
     implementation rootProject.ext.dependencies['okhttp3']
     implementation rootProject.ext.dependencies['okio']
-    implementation project(path: ':ULog')
+    implementation rootProject.ext.dependencies['ulog']
+//    implementation project(path: ':ULog')
 }
