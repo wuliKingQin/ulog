@@ -3,7 +3,6 @@ package com.utopia.android.ulog.print.file.increment
 import com.utopia.android.ulog.config.UConfig
 import com.utopia.android.ulog.extend.getFileSize
 import com.utopia.android.ulog.extend.splitFileNameInDate
-import com.utopia.android.ulog.extend.trace
 import com.utopia.android.ulog.print.file.writer.Writer
 import com.utopia.android.ulog.tools.DateTool
 import java.io.File
@@ -39,20 +38,14 @@ class DefaultIncrementer @JvmOverloads constructor(
      * time: 2021/12/26 8:50
      */
     private fun generateNewFileName(config: UConfig): String {
-        trace("enter")
-        try {
-            val prefixName = config.logFilePrefixName ?: "utopia"
-            mFileNameBuilder.clear()
-            val newFileName = mFileNameBuilder.append(prefixName)
-                .append(Incrementer.SEPARATOR)
-                .append(mDateTool.format(System.currentTimeMillis()))
-                .append(Incrementer.FILE_SUFFIX_NAME)
-                .toString()
-            trace("newFileName=${newFileName}")
-            return newFileName
-        } finally {
-            trace("end")
-        }
+        val prefixName = config.logFilePrefixName ?: "utopia"
+        mFileNameBuilder.clear()
+        val newFileName = mFileNameBuilder.append(prefixName)
+            .append(Incrementer.SEPARATOR)
+            .append(mDateTool.format(System.currentTimeMillis()))
+            .append(Incrementer.FILE_SUFFIX_NAME)
+            .toString()
+        return newFileName
     }
 
     override fun isCreateFile(config: UConfig, writer: Writer): Boolean {
@@ -65,33 +58,26 @@ class DefaultIncrementer @JvmOverloads constructor(
      * time: 2021/12/26 8:50
      */
     private fun isCreateNewFile(config: UConfig, writer: Writer): Boolean {
-        trace("end")
-        return try {
-            val fileName = writer.getOpenedFileName()
-            val isWriteClosed = !writer.isOpened()
-            var maxLogFileSize = config.getOnlineConfig()?.getMaxLogFileSize() ?: -1
-            if (maxLogFileSize <= 0) {
-                maxLogFileSize = config.maxLogFileSize
+        val fileName = writer.getOpenedFileName()
+        val isWriteClosed = !writer.isOpened()
+        var maxLogFileSize = config.getOnlineConfig()?.getMaxLogFileSize() ?: -1
+        if (maxLogFileSize <= 0) {
+            maxLogFileSize = config.maxLogFileSize
+        }
+        return when {
+            fileName.isNullOrEmpty() || isWriteClosed -> {
+                checkLastFileSpace(config.cacheLogDir, maxLogFileSize, writer)
             }
-            when {
-                fileName.isNullOrEmpty() || isWriteClosed -> {
-                    checkLastFileSpace(config.cacheLogDir, maxLogFileSize, writer)
-                }
-                else -> {
-                    val dateStr = writer.getOpenedFile().splitFileNameInDate()
-                    val isSameDay = mDateTool.calculateTwoDateSameDay(dateStr)
-                    trace("dateStr=${dateStr} isSameDay=$isSameDay")
-                    if (isSameDay) {
-                        val targetFileSize = writer.getOpenedFile().getFileSize()
-                        trace("maxLogFileSize=${maxLogFileSize} targetFileSize=$targetFileSize")
-                        targetFileSize >= maxLogFileSize
-                    } else {
-                        true
-                    }
+            else -> {
+                val dateStr = writer.getOpenedFile().splitFileNameInDate()
+                val isSameDay = mDateTool.calculateTwoDateSameDay(dateStr)
+                if (isSameDay) {
+                    val targetFileSize = writer.getOpenedFile().getFileSize()
+                    targetFileSize >= maxLogFileSize
+                } else {
+                    true
                 }
             }
-        } finally {
-            trace("end")
         }
     }
 
@@ -104,22 +90,17 @@ class DefaultIncrementer @JvmOverloads constructor(
         maxLogFileSize: Int,
         writer: Writer
     ): Boolean {
-        trace("enter")
         val lastFileName = writer.getLastLogFileName(cacheDir)
-        trace("lastFileName=${lastFileName}")
         return lastFileName?.let { lastFilePath ->
             val lastFile = File(lastFilePath)
             if (!lastFile.exists()) {
-                trace("lastFileName=${lastFile.path} is not exists")
                 true
             } else {
                 val lastFileSize = lastFile.getFileSize()
-                trace("lastFileSize=${lastFileSize} maxLogFileSize=${maxLogFileSize}")
                 var isNewCreateFile = lastFileSize >= maxLogFileSize
                 if (!isNewCreateFile) {
                     val dateStr = lastFile.splitFileNameInDate()
                     val isSameDay = mDateTool.calculateTwoDateSameDay(dateStr)
-                    trace("dateStr=$dateStr isSameDay=${isSameDay}")
                     isNewCreateFile = if (isSameDay) {
                         !writer.open(lastFile)
                     } else {

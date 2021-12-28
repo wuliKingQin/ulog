@@ -1,7 +1,6 @@
 package com.utopia.android.ulog.print.file.clean
 
 import com.utopia.android.ulog.config.UConfig
-import com.utopia.android.ulog.extend.trace
 import java.io.File
 
 /**
@@ -16,9 +15,7 @@ interface Cleaner {
      * time: 2021/11/18 17:11
      */
     fun executeCleanFiles(config: UConfig) {
-        trace("enter")
         val cacheDir = config.cacheLogDir ?: return
-        trace("cacheDir=${cacheDir}")
         val cacheDirFile = File(cacheDir)
         var files = cacheDirFile.listFiles { file ->
             file.isFile && !file.name.endsWith(".zip")
@@ -29,15 +26,12 @@ interface Cleaner {
         }
         if (!files.isNullOrEmpty()) {
             for (file in files) {
-                trace("scan fileName=${file.name}")
                 if (shouldClean(config, file)) {
-                    trace("execute delete fileName=${file.name}")
                     file.delete()
                 }
             }
         }
         onCleanAfter(cacheDirFile)
-        trace("end")
     }
 
     /**

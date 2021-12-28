@@ -5,7 +5,6 @@ import android.app.AlertDialog
 import android.content.Context
 import com.utopia.android.ulog.config.UConfig
 import com.utopia.android.ulog.extend.copyToClipboard
-import com.utopia.android.ulog.extend.trace
 import java.lang.Exception
 import java.lang.StringBuilder
 
@@ -31,38 +30,29 @@ class UploadHandler {
         isSilentlyUpload: Boolean,
         isCheckUseInfo: Boolean
     ) {
-        trace("enter")
         isNeedHintDialog = !isSilentlyUpload
-        try {
-            trace("UploadLogService.isUploading=${UploadJobService.isUploading}")
-            if (UploadJobService.isUploading) {
-                // doc: 防止重复执行上传逻辑
-                trace("uploading")
+        if (UploadJobService.isUploading) {
+            // doc: 防止重复执行上传逻辑
+            return
+        }
+        UploadJobService.isUploading = true
+        var isUploadToService = true
+        if (isCheckUseInfo) {
+            val condition = uploadCondition ?: DefaultUploadFilter().apply {
+                this.uniqueIdentity = uniqueIdentity ?:
+                        config.fileUploader?.uploadInfo?.getUniqueIdentity()
+            }
+            val userInfoList = config.getOnlineConfig()?.getAutoUploadWhiteList()
+            if (userInfoList.isNullOrEmpty()) {
+                UploadJobService.isUploading = false
                 return
             }
-            UploadJobService.isUploading = true
-            var isUploadToService = true
-            if (isCheckUseInfo) {
-                val condition = uploadCondition ?: DefaultUploadFilter().apply {
-                    this.uniqueIdentity = uniqueIdentity ?:
-                    config.fileUploader?.uploadInfo?.getUniqueIdentity()
-                }
-                val userInfoList = config.getOnlineConfig()?.getAutoUploadWhiteList()
-                if (userInfoList.isNullOrEmpty()) {
-                    UploadJobService.isUploading = false
-                    trace("The upload condition is not met===logAutoUploadList is null")
-                    return
-                }
-                isUploadToService = condition.shouldUpload(userInfoList)
-            }
-            trace("isUploadToService=${isUploadToService}")
-            if (isUploadToService) {
-                doUpload(context, config)
-            } else {
-                UploadJobService.isUploading = false
-            }
-        } finally {
-            trace("end")
+            isUploadToService = condition.shouldUpload(userInfoList)
+        }
+        if (isUploadToService) {
+            doUpload(context, config)
+        } else {
+            UploadJobService.isUploading = false
         }
     }
 
@@ -73,12 +63,9 @@ class UploadHandler {
     private fun doUpload(
         context: Context,
         config: UConfig) {
-        trace("enter")
         val cacheDir = config.cacheLogDir ?: return
         val fileUploader = config.fileUploader
-        trace("fileUploader=$fileUploader")
         if (fileUploader == null) {
-            trace("fileUploader == null")
             UploadJobService.isUploading = false
             return
         }
@@ -88,7 +75,6 @@ class UploadHandler {
         } else {
             startUpload(context, cacheDir)
         }
-        trace("end")
     }
 
     /**
@@ -120,14 +106,12 @@ class UploadHandler {
      * time: 2021/11/26 9:37
      */
     private fun startUpload(context: Context, cacheDir: String) {
-        trace("enter")
         try {
             UploadJobService.startUpload(context, cacheDir)
         } catch (e: Exception) {
             e.printStackTrace()
             UploadJobService.isUploading = false
         }
-        trace("end")
     }
 
     /**

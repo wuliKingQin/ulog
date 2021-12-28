@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import com.google.gson.Gson
 import com.utopia.android.ulog.extend.request
-import com.utopia.android.ulog.extend.trace
 import com.utopia.android.ulog.service.JobService
 
 /**
@@ -45,14 +44,12 @@ internal class ConfigJobService(
     override fun doWork(intent: Intent): ConfigModel? {
         var configModel = configUpdater.doWork(intent)
         if (configModel != null) {
-            trace("configModel=${configModel}")
             return configModel
         }
         val configUrl = configUpdater.getConfigUrl() ?: return null
         val configModelCls = configUpdater.getConfigModel() ?: return null
         configUrl.request { success, response ->
             if (success && !response.isNullOrEmpty()) {
-                trace("response=${response}")
                 val configBo = Gson().fromJson(response, configModelCls)
                 configModel = configUpdater.onChangeConfigModel(configBo)
             }

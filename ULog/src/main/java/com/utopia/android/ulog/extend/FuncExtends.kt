@@ -39,7 +39,6 @@ internal fun File?.getFileOrDirSize(sumSize: Double = 0.0): Double {
         tempSumSize
     } else {
         val tempSize = sumSize + length().toDouble()
-        trace("getFileOrDirSize tempSize=$tempSize")
         tempSize
     }
 }
@@ -76,31 +75,21 @@ internal fun File?.splitFileNameInDate(
  * time: 2021/11/18 10:32
  */
 internal fun File?.createNewFileOrDir(): Boolean {
-    trace("enter")
-    return try {
-        this ?: return false
-        if (!exists()) {
-            try {
-                parentFile?.apply {
-                    trace("parentFile exists: ${exists()}")
-                    if (!exists()) {
-                        trace("mkdirs parentFile")
-                        mkdirs()
-                    }
+    this ?: return false
+    return if (!exists()) {
+        try {
+            parentFile?.apply {
+                if (!exists()) {
+                    mkdirs()
                 }
-                val statue = createNewFile()
-                trace("create target file statue: $statue")
-                statue
-            } catch (e: Exception) {
-                trace("error: ${e.message}")
-                false
             }
-        } else {
-            trace("target file exits: true")
+            val statue = createNewFile()
+            statue
+        } catch (e: Exception) {
             false
         }
-    } finally {
-        trace("end")
+    } else {
+        false
     }
 }
 
@@ -131,16 +120,6 @@ internal fun getSdCardAvailable(divNumber: Long = 1): Long {
     }
 }
 
-/**
- * des: 用于系统内部的trace记录器
- * time: 2021/11/19 10:08
- */
-internal fun trace(trace: String) {
-    if (!ULog.isDebug()) return
-    val exception = Throwable()
-    val className = exception.stackTrace[1].className
-    Log.i("ULog", "${className.split(".").lastOrNull()} ${exception.stackTrace[1].methodName}: $trace")
-}
 // ===========================Long extends ================== \\
 /**
  * des: 将长整形格式为日期字符串

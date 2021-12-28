@@ -1,7 +1,6 @@
 package com.utopia.android.ulog.print.file.writer
 
 import com.utopia.android.ulog.extend.createNewFileOrDir
-import com.utopia.android.ulog.extend.trace
 import com.utopia.android.ulog.print.file.encrypt.Encryptor
 import com.utopia.android.ulog.tools.UnmapTool
 import java.io.*
@@ -96,13 +95,8 @@ class DefaultFileWriter(
 
     override fun append(message: String) {
         val position = mCacheMapOperator?.getMapPosition() ?: 0
-        trace("position=$position")
         if (position < MAP_BUFFER_TOTAL_SIZE / 3) {
             val isAppendSuccess = mCacheMapOperator?.append(message, encryptor) ?: false
-            trace(
-                "isAppendSuccess=$isAppendSuccess " +
-                        "mCacheMapOperator != null=${mCacheMapOperator != null}"
-            )
             if (!isAppendSuccess && mCacheMapOperator != null) {
                 flush(message)
             }
@@ -125,7 +119,6 @@ class DefaultFileWriter(
             val msgByteArraySize = msgByteArray?.size ?: 0
             val lastPosition = mCacheMapOperator?.getLastPosition() ?: 0
             val flushSize = lastPosition + msgByteArraySize.toLong()
-            trace("lastPosition=$lastPosition flushSize=$flushSize")
             if (flushSize <= 0) {
                 return
             }
@@ -136,7 +129,6 @@ class DefaultFileWriter(
             )
             if (lastPosition > 0) {
                 val isAppendSuccess = mLogFileMapOperator?.append(mCacheMapOperator) ?: false
-                trace("mCacheMapOperator isAppendSuccess=$isAppendSuccess")
                 if (!isAppendSuccess) {
                     val insertArray = mCacheMapOperator?.array()
                     if (insertArray != null) {
@@ -146,7 +138,6 @@ class DefaultFileWriter(
             }
             if (msgByteArraySize > 0) {
                 val isAppendSuccess = mLogFileMapOperator?.append(msgByteArray!!, encryptor) ?: false
-                trace("mLogFileMapOperator isAppendSuccess=$isAppendSuccess")
                 if (!isAppendSuccess) {
                     val insertArray = msgByteArray!!.toList()
                     if (putFailList == null) {
@@ -166,7 +157,6 @@ class DefaultFileWriter(
             }
             mLogFileMapOperator = null
             if (!putFailList.isNullOrEmpty()) {
-                trace("io write log size=${putFailList.size}")
                 putFailIoWrite(putFailList.toByteArray())
             }
         }
@@ -489,7 +479,7 @@ class DefaultFileWriter(
                     put(mClearBuffer)
                     flush()
                 } catch (e: Exception) {
-                    trace(e.message.toString())
+                    e.printStackTrace()
                 }
                 clear()
             }

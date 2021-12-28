@@ -3,7 +3,6 @@ package com.utopia.android.ulog.print.file
 import com.utopia.android.ulog.config.UConfig
 import com.utopia.android.ulog.core.message.UMessage
 import com.utopia.android.ulog.extend.getSdCardAvailable
-import com.utopia.android.ulog.extend.trace
 import com.utopia.android.ulog.print.Printer
 import com.utopia.android.ulog.print.file.clean.Cleaner
 import com.utopia.android.ulog.print.file.clean.DefaultCleaner
@@ -93,7 +92,6 @@ class FilePrinter constructor(): Printer{
                 val newFile = File(cacheDir, newFileName)
                 writer.recordLastLogFileName(newFile)
                 if (!writer.open(newFile)) {
-                    trace("open file fail: fileName=${newFileName}")
                     return
                 }
             }

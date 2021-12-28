@@ -3,7 +3,6 @@ package com.utopia.android.ulog.print.file.clean
 import com.utopia.android.ulog.config.UConfig
 import com.utopia.android.ulog.extend.getFileSize
 import com.utopia.android.ulog.extend.splitFileNameInDate
-import com.utopia.android.ulog.extend.trace
 import com.utopia.android.ulog.tools.DateTool
 import java.io.File
 import java.lang.Exception
@@ -21,30 +20,23 @@ class DefaultCleaner: Cleaner {
     }
 
     override fun onCleanBefore(config: UConfig, cacheDirFile: File): Array<File>? {
-        trace("enter")
         var maxLogFolderSize = config.getOnlineConfig()?.getMaxCacheDirSize() ?: -1
         if (maxLogFolderSize <= 0) {
             maxLogFolderSize = config.maxCacheDirSize
         }
         val isCleanLongestFile = cacheDirFile.getFileSize() >= maxLogFolderSize
-        trace("isCleanLongestFile=$isCleanLongestFile")
-        try {
-            return if (isCleanLongestFile) {
-                val fileList = cacheDirFile.listFiles()
-                if (!fileList.isNullOrEmpty()) {
-                    try {
-                        sortAndDelete(fileList, cacheDirFile, maxLogFolderSize.toDouble())
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        trace("sortOrDelete exception:${e.message}")
-                    }
+        return if (isCleanLongestFile) {
+            val fileList = cacheDirFile.listFiles()
+            if (!fileList.isNullOrEmpty()) {
+                try {
+                    sortAndDelete(fileList, cacheDirFile, maxLogFolderSize.toDouble())
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-                cacheDirFile.listFiles()
-            } else {
-                null
             }
-        } finally {
-            trace("end")
+            cacheDirFile.listFiles()
+        } else {
+            null
         }
     }
 
@@ -53,7 +45,6 @@ class DefaultCleaner: Cleaner {
      * time: 2021/11/19 15:42
      */
     private fun sortAndDelete(fileList: Array<File>, cacheDirFile: File, maxLogFolderSize: Double) {
-        trace("enter fileList=${fileList}")
         Arrays.sort(fileList) { file1, file2 ->
             var compare = mDateTool.compareTowDate(
                 file1.splitFileNameInDate(),
@@ -64,15 +55,12 @@ class DefaultCleaner: Cleaner {
             }
             compare
         }
-        trace("fileList=${fileList}")
         for (file in fileList) {
             file.delete()
-            trace("delete file=${file.name}")
             if (cacheDirFile.getFileSize() < maxLogFolderSize) {
                 break
             }
         }
-        trace("end")
     }
 
     override fun shouldClean(config: UConfig, targetFile: File): Boolean {
@@ -80,19 +68,12 @@ class DefaultCleaner: Cleaner {
         if (logValidTime <= 0) {
             logValidTime = config.logValidTime
         }
-        trace("enter")
-        return try {
-            val dateStr = targetFile.splitFileNameInDate()
-            val diffDay = mDateTool.calculateFewDay(dateStr)
-            trace("dateStr=${dateStr}" +
-                    " diffDay=${diffDay} logValidTime=${logValidTime}")
-            if (diffDay < 0) {
-                true
-            } else {
-                diffDay >= logValidTime
-            }
-        } finally {
-            trace("end")
+        val dateStr = targetFile.splitFileNameInDate()
+        val diffDay = mDateTool.calculateFewDay(dateStr)
+        return if (diffDay < 0) {
+            true
+        } else {
+            diffDay >= logValidTime
         }
     }
 }

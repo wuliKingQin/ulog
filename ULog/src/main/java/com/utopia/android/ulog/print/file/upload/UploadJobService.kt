@@ -5,7 +5,6 @@ import android.content.Intent
 import com.utopia.android.ulog.ULog
 import com.utopia.android.ulog.core.message.UMessage
 import com.utopia.android.ulog.extend.splitFileNameInDate
-import com.utopia.android.ulog.extend.trace
 import com.utopia.android.ulog.service.JobService
 import com.utopia.android.ulog.tools.DateTool
 import java.io.File
@@ -62,15 +61,12 @@ internal class UploadJobService(
 
     override fun doWork(intent: Intent) {
         try {
-            trace("enter")
             val cacheDir = intent.getStringExtra(CACHE_LOG_DIR)
-            trace("tempFileUploader=${uploader} cacheDir=${cacheDir}")
             if (!cacheDir.isNullOrEmpty()) {
                 isUploading = true
                 executeFlush()
                 val cacheDirFile = File(cacheDir)
                 val logZipFile = logFilesZip(cacheDirFile, uploader)
-                trace("startUpload logZipFile=${logZipFile?.path}")
                 if (logZipFile != null) {
                     try {
                         val resultCallback = ResultCallbackImpl(
@@ -88,9 +84,6 @@ internal class UploadJobService(
         } catch (e: Exception) {
             isUploading = false
             e.printStackTrace()
-        } finally {
-            // doc: 清除文件导入器实例，防止内存泄露
-            trace("end")
         }
     }
 
@@ -108,13 +101,10 @@ internal class UploadJobService(
      */
     private fun logFilesZip(cacheDirFile: File, fileUploader: Uploader): File? {
         return try {
-            trace("enter")
             doZip(cacheDirFile, fileUploader)
         } catch (e: Exception) {
             e.printStackTrace()
             null
-        } finally {
-            trace("end")
         }
     }
 
@@ -151,7 +141,6 @@ internal class UploadJobService(
                     zipFileName
                 }
                 val zipFile = File(cacheFileDir, zipFileName)
-                trace("zipFileName=${zipFile.path}")
                 ZipOutputStream(FileOutputStream(zipFile)).use { zipOutput ->
                     for (file in uploadFiles) {
                         FileInputStream(file).use { fileInput ->
@@ -190,17 +179,14 @@ internal class UploadJobService(
         private var retryCount = 2
 
         override fun onUploadSuccess() {
-            trace("onUploadSuccess")
             clear(true)
         }
 
         private fun clear(success: Boolean = false) {
             isUploading = false
-            trace("success=${success}")
             if (targetFile.exists()) {
                 try {
                     targetFile.delete()
-                    trace("deleted zip file=${targetFile.name}")
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -210,7 +196,6 @@ internal class UploadJobService(
                 for (file in logFiles) {
                     try {
                         file.delete()
-                        trace("deleted log file=${file.name}")
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -219,7 +204,6 @@ internal class UploadJobService(
         }
 
         override fun onUploadFail() {
-            trace("retryCount=$retryCount")
             if (retryCount > 0) {
                 retryCount--
                 fileUploader.startUpload(targetFile, this)

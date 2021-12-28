@@ -1,7 +1,6 @@
 package com.utopia.android.demo
 
 import android.app.Application
-import com.utopia.android.ulog.BuildConfig
 import com.utopia.android.ulog.ULog
 import com.utopia.android.ulog.config.UConfig
 import com.utopia.android.ulog.config.online.ConfigModel
