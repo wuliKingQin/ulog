@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/testButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="打印日志"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"/>
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/updateConfigBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="更新配置"
+        app:layout_constraintTop_toBottomOf="@+id/testButton"
+        app:layout_constraintLeft_toLeftOf="parent"/>
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/uploadFileBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="上传日志文件"
+        app:layout_constraintTop_toBottomOf="@+id/updateConfigBtn"
+        app:layout_constraintLeft_toLeftOf="parent"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

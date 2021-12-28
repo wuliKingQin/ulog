@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.utopia.android.ulog">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <application>
+        <service
+            android:name=".service.LoggerJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false"/>
+    </application>
+</manifest>

@@ -1,0 +1,51 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+}
+
+android {
+    compileSdkVersion COMPILESDK
+    buildToolsVersion BUILDTOOLS
+
+    defaultConfig {
+        minSdkVersion MINSDK
+        targetSdkVersion TARGETSDK
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    buildFeatures {
+        viewBinding = true
+    }
+}
+
+dependencies {
+    implementation rootProject.ext.dependencies['kotlin-stdlib']
+    implementation rootProject.ext.dependencies['core-ktx']
+    implementation rootProject.ext.dependencies['appcompat']
+    implementation rootProject.ext.dependencies['material']
+    implementation rootProject.ext.dependencies['constraintlayout']
+    implementation rootProject.ext.dependencies['junit']
+    implementation rootProject.ext.dependencies['androidx-junit']
+    implementation rootProject.ext.dependencies['espresso-core']
+    implementation rootProject.ext.dependencies['okhttp3']
+    implementation rootProject.ext.dependencies['okio']
+    implementation project(path: ':ULog')
+}
