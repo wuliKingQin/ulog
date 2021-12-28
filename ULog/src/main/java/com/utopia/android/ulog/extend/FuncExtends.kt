@@ -10,6 +10,7 @@ import android.os.StatFs
 import android.util.Log
 import android.widget.Toast
 import com.google.gson.Gson
+import com.utopia.android.ulog.ULog
 import com.utopia.android.ulog.print.file.increment.Incrementer
 import java.io.BufferedReader
 import java.io.File
@@ -135,6 +136,7 @@ internal fun getSdCardAvailable(divNumber: Long = 1): Long {
  * time: 2021/11/19 10:08
  */
 internal fun trace(trace: String) {
+    if (!ULog.isDebug()) return
     val exception = Throwable()
     val className = exception.stackTrace[1].className
     Log.i("ULog", "${className.split(".").lastOrNull()} ${exception.stackTrace[1].methodName}: $trace")
