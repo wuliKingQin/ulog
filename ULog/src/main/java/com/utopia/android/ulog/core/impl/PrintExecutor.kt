@@ -19,7 +19,7 @@ import java.util.concurrent.ThreadFactory
  */
 class PrintExecutor: Executor {
 
-    // doc: 用于创建线程的线程工程
+    // doc: 用于创建线程的线程工厂
     internal var threadFactory: ThreadFactory? = null
     // doc: 工作池，用来添加打印器
     private var mWorkerPool: WorkerPool? = null

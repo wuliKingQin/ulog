@@ -62,7 +62,7 @@ interface JobService<T> {
     }
 
     /**
-     * des: 在该方法中进行任务的逻辑, 返回值true表示需要拦截，有上一层进行处理
+     * des: 在该方法中进行任务的逻辑
      * time: 2021/12/27 19:17
      */
     fun doWork(intent: Intent): T?

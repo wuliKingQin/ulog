@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicReference
 internal class ULogger {
 
     // doc: 用于保存日志的配置文件
-    private var config: UConfig? = null
+    var config: UConfig? = null
 
     // doc: 用于处理日志文件上传的逻辑
     private val mUploadHandler by lazy {
@@ -130,7 +130,7 @@ internal class ULogger {
     }
 
     /**
-     * des: 只打印log日志打控制台，不输入到文件
+     * des: 只打印log日志到控制台，不输入到文件
      * time: 2021/12/9 9:56
      */
     fun printlnToAndroid(level: Int, tag: String?, message: Any?) {

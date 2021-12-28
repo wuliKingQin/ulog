@@ -78,7 +78,9 @@ object ULog {
      */
     @JvmStatic
     fun toLogcat(tag: String, message: Any?) {
-        mLogger.printlnToAndroid(Log.DEBUG, tag, message)
+        if (isDebug()) {
+            mLogger.printlnToAndroid(Log.DEBUG, tag, message)
+        }
     }
 
     /**
@@ -89,6 +91,7 @@ object ULog {
     @JvmStatic
     @JvmOverloads
     fun trace(message: Any?, deep: Int = 1) {
+        if (!isDebug()) return
         val exception = Throwable()
         val className = exception.stackTrace[deep].className
         val tag = "${className.split(".").lastOrNull()}_${
@@ -136,5 +139,13 @@ object ULog {
      */
     internal fun setOnlineConfig(onlineConfig: ConfigModel?) {
         mLogger.setOnlineConfig(onlineConfig)
+    }
+
+    /**
+     * des: 获取是否处于debug模式
+     * time: 2021/12/27 19:52
+     */
+    internal fun isDebug(): Boolean {
+        return mLogger.config?.isDebug ?: false
     }
 }
