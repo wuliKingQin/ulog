@@ -166,14 +166,16 @@ internal class ULogger {
         message: Any?,
         otherArgs: Map<String, Any>? = null
     ): UMessage {
-        return UMessage.obtain().apply {
+        val rawMessage = UMessage.obtain().apply {
             this.level = level
             this.tag = tag
             this.content = message
             this.otherArgs = otherArgs
             this.config = this@ULogger.config
             this.time = System.currentTimeMillis()
+            this.thread = Thread.currentThread()
         }
+        return config?.interceptor?.onIntercept(rawMessage) ?: rawMessage
     }
 
     /**

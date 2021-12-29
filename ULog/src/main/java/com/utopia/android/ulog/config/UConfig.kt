@@ -5,6 +5,7 @@ import com.utopia.android.ulog.config.online.ConfigUpdater
 import com.utopia.android.ulog.core.impl.ThreadFactoryQueue
 import com.utopia.android.ulog.print.Printer
 import com.utopia.android.ulog.print.file.upload.Uploader
+import com.utopia.android.ulog.print.interceptor.Interceptor
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -38,7 +39,9 @@ data class UConfig @JvmOverloads constructor(
     // doc: 提供使用接入方的线程工程来进行创建线程
     internal var threadFactoryQueue: ThreadFactoryQueue? = null,
     // doc: 线上配置自己实现的更新器
-    internal var configUpdater: ConfigUpdater? = null
+    internal var configUpdater: ConfigUpdater? = null,
+    // doc: 日志拦截器
+    internal var interceptor: Interceptor? = null
 ) {
 
     // doc: 获取在线配置文件对象，因为这个地方可能在其他线程进行修改
@@ -79,6 +82,7 @@ data class UConfig @JvmOverloads constructor(
         workers = builder.workers
         threadFactoryQueue = builder.threadFactoryQueue
         configUpdater = builder.configUpdater
+        interceptor = builder.interceptor
     }
 
     /**
@@ -114,6 +118,8 @@ data class UConfig @JvmOverloads constructor(
         internal var threadFactoryQueue: ThreadFactoryQueue? = null
         // doc: 线上配置自己实现的更新器
         internal var configUpdater: ConfigUpdater? = null
+        // doc: 日志拦截器
+        internal var interceptor: Interceptor? = null
 
         /**
          * des: 设置debug开关
@@ -234,6 +240,15 @@ data class UConfig @JvmOverloads constructor(
          */
         fun setConfigUpdater(configUpdater: ConfigUpdater): Builder {
             this.configUpdater = configUpdater
+            return this
+        }
+
+        /**
+         * des: 设置日志拦截器
+         * time: 2021/12/29 15:32
+         */
+        fun setInterceptor(interceptor: Interceptor?): Builder {
+            this.interceptor = interceptor
             return this
         }
 

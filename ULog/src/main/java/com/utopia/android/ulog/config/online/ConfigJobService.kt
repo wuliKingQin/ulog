@@ -7,7 +7,7 @@ import com.utopia.android.ulog.extend.request
 import com.utopia.android.ulog.service.JobService
 
 /**
- * des: 用于在线配置的拉取以及更新服务
+ * des: 用于在线配置数据的拉取以及更新服务
  * author 秦王
  * time 2021/12/27 19:25
  */

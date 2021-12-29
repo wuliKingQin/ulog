@@ -22,7 +22,9 @@ data class UMessage(
     // doc: 是否写入到日志文件
     var isWriteToFile: Boolean = true,
     // doc: 获取配置信息
-    var config: UConfig? = null
+    var config: UConfig? = null,
+    // doc: 产生日志的线程
+    var thread: Thread? = null
 ): Usable() {
 
     var next: UMessage? = null
@@ -84,6 +86,7 @@ data class UMessage(
         type = LOG
         isWriteToFile = true
         config = null
+        thread = null
         synchronized(mSyncObj) {
             if (mPoolSize < POOL_MAX_SIZE) {
                 next = mRecordPool

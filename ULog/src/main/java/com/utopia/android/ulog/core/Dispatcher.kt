@@ -29,7 +29,9 @@ class Dispatcher(
      * time: 2021/12/23 19:36
      */
     fun dispense(message: UMessage) {
-        callAndClearUpWorkers(message)
+        synchronized(this) {
+            callAndClearUpWorkers(message)
+        }
     }
 
     /**

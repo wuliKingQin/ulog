@@ -14,8 +14,8 @@ class DefaultOutputFormatter: Formatter<UMessage> {
 
     companion object {
         private const val DATE_FORMAT = "yyyy/MM/dd HH:mm:ss SSS"
-        private const val BRACKET_LEFT = '【'
-        private const val BRACKET_RIGHT = '】'
+        private const val BRACKET_LEFT = '['
+        private const val BRACKET_RIGHT = ']'
         private const val SEPARATOR = ": "
     }
 
@@ -30,7 +30,7 @@ class DefaultOutputFormatter: Formatter<UMessage> {
 
     // doc: 异常格式化器
     private val throwableFormatter by lazy {
-        ThrowableFormatter("", "", "")
+        ThrowableFormatter(true, "", "", "")
     }
 
     // doc: 日期格式化工具
