@@ -7,10 +7,7 @@ import android.os.Build
 import android.os.Environment
 import android.os.Looper
 import android.os.StatFs
-import android.util.Log
 import android.widget.Toast
-import com.google.gson.Gson
-import com.utopia.android.ulog.ULog
 import com.utopia.android.ulog.print.file.increment.Incrementer
 import java.io.BufferedReader
 import java.io.File

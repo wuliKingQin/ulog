@@ -5,6 +5,8 @@ import com.utopia.android.ulog.ULog
 import com.utopia.android.ulog.config.UConfig
 import com.utopia.android.ulog.config.online.ConfigModel
 import com.utopia.android.ulog.config.online.ConfigUpdater
+import com.utopia.android.ulog.core.impl.ThreadFactoryQueue
+import com.utopia.android.ulog.core.message.MessageTask
 import com.utopia.android.ulog.print.file.FilePrinter
 import com.utopia.android.ulog.print.file.upload.AbstractFileUploader
 import com.utopia.android.ulog.print.file.upload.Uploader
@@ -12,6 +14,8 @@ import com.utopia.android.ulog.print.file.writer.DefaultFileWriter
 import com.utopia.android.ulog.print.file.writer.Writer
 import com.utopia.android.ulog.print.logcat.AndroidPrinter
 import java.io.File
+import java.util.concurrent.BlockingDeque
+import java.util.concurrent.LinkedBlockingDeque
 
 class TestApp: Application(){
 
@@ -31,6 +35,15 @@ class TestApp: Application(){
             .setCacheLogDir(File(externalCacheDir?.absolutePath, "log").path)
             .addPrinter(filePrinter)
             .addPrinters(AndroidPrinter::class.java)
+            .setThreadFactory(object : ThreadFactoryQueue {
+                override fun getBlockingQueue(): BlockingDeque<MessageTask> {
+                    return LinkedBlockingDeque<MessageTask>(1000)
+                }
+
+                override fun newThread(runnable: Runnable?): Thread {
+                    return Thread(runnable)
+                }
+            })
             .setConfigUpdater(ConfigUpdaterImpl())
             .setFileUploader(UploaderImpl(object :Uploader.UploadInfo{
                 override fun getUploadUrl(): String {

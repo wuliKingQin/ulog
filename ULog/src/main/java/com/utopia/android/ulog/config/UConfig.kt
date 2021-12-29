@@ -2,9 +2,9 @@ package com.utopia.android.ulog.config
 
 import com.utopia.android.ulog.config.online.ConfigModel
 import com.utopia.android.ulog.config.online.ConfigUpdater
+import com.utopia.android.ulog.core.impl.ThreadFactoryQueue
 import com.utopia.android.ulog.print.Printer
 import com.utopia.android.ulog.print.file.upload.Uploader
-import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -36,7 +36,7 @@ data class UConfig @JvmOverloads constructor(
     // doc: 添加已经new出来的打印器
     internal var workers: List<Printer>? = null,
     // doc: 提供使用接入方的线程工程来进行创建线程
-    internal var threadFactory: ThreadFactory? = null,
+    internal var threadFactoryQueue: ThreadFactoryQueue? = null,
     // doc: 线上配置自己实现的更新器
     internal var configUpdater: ConfigUpdater? = null
 ) {
@@ -77,7 +77,7 @@ data class UConfig @JvmOverloads constructor(
         remainingDiskSize = builder.remainingDiskSize
         logFilePrefixName = builder.logFilePrefixName
         workers = builder.workers
-        threadFactory = builder.threadFactory
+        threadFactoryQueue = builder.threadFactoryQueue
         configUpdater = builder.configUpdater
     }
 
@@ -111,7 +111,7 @@ data class UConfig @JvmOverloads constructor(
         // doc: 添加已经new出来的打印器
         internal var workers: List<Printer>? = null
         // doc: 提供使用接入方的线程工程来进行创建线程
-        internal var threadFactory: ThreadFactory? = null
+        internal var threadFactoryQueue: ThreadFactoryQueue? = null
         // doc: 线上配置自己实现的更新器
         internal var configUpdater: ConfigUpdater? = null
 
@@ -223,8 +223,8 @@ data class UConfig @JvmOverloads constructor(
          * des: 用于创建线程的线程工厂
          * time: 2021/12/27 9:36
          */
-        fun setThreadFactory(threadFactory: ThreadFactory): Builder {
-            this.threadFactory = threadFactory
+        fun setThreadFactory(threadFactoryQueue: ThreadFactoryQueue): Builder {
+            this.threadFactoryQueue = threadFactoryQueue
             return this
         }
 

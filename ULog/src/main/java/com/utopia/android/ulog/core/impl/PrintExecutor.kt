@@ -10,7 +10,6 @@ import com.utopia.android.ulog.print.Printer
 import java.lang.Exception
 import java.util.concurrent.BlockingDeque
 import java.util.concurrent.LinkedBlockingDeque
-import java.util.concurrent.ThreadFactory
 
 /**
  * des: 该类封装为打印器的执行，用来添加打印器，执行消息等
@@ -20,7 +19,7 @@ import java.util.concurrent.ThreadFactory
 class PrintExecutor: Executor {
 
     // doc: 用于创建线程的线程工厂
-    internal var threadFactory: ThreadFactory? = null
+    internal var threadFactoryQueue: ThreadFactoryQueue? = null
     // doc: 工作池，用来添加打印器
     private var mWorkerPool: WorkerPool? = null
     // doc: 用于日志的分发工作
@@ -54,10 +53,10 @@ class PrintExecutor: Executor {
     }
 
     private fun createWorker(printer: Printer, uMessage: UMessage?): Worker {
-        if (threadFactory !is ThreadFactoryWrapper) {
-            threadFactory = ThreadFactoryWrapper(threadFactory, printer.name())
+        if (threadFactoryQueue !is ThreadFactoryQueueWrapper) {
+            threadFactoryQueue = ThreadFactoryQueueWrapper(threadFactoryQueue, printer.name())
         }
-        return WorkerImpl(threadFactory!!, printer, uMessage)
+        return WorkerImpl(threadFactoryQueue!!, printer, uMessage)
     }
 
     /**
@@ -66,7 +65,7 @@ class PrintExecutor: Executor {
      * time 2021/11/16 16:50
      */
     inner class WorkerImpl(
-        private var threadFactory: ThreadFactory,
+        private var threadFactoryQueue: ThreadFactoryQueue,
         override var printer: Printer,
         message: UMessage? = null
     ) : Worker {
@@ -77,11 +76,11 @@ class PrintExecutor: Executor {
         private var firstTask: MessageTask? = null
 
         override val taskQueue: BlockingDeque<MessageTask> by lazy {
-            LinkedBlockingDeque<MessageTask>()
+            threadFactoryQueue.getBlockingQueue()
         }
 
         override val thread: Thread by lazy {
-            threadFactory.newThread(this)
+            threadFactoryQueue.newThread(this)
         }
 
         init {
@@ -170,10 +169,20 @@ class PrintExecutor: Executor {
      * author 秦王
      * time 2021/12/27 9:49
      */
-    class ThreadFactoryWrapper(
-        private var parent: ThreadFactory?,
+    class ThreadFactoryQueueWrapper(
+        private var parent: ThreadFactoryQueue?,
         private var threadName: String
-        ): ThreadFactory {
+        ): ThreadFactoryQueue {
+
+        companion object {
+            // doc: 为了防止一下子存储阻塞队列的日志过多造成的OOM，所以设置了最大缓存个数1000
+            private const val MAX_TASK_COUNT = 1000
+        }
+
+        override fun getBlockingQueue(): BlockingDeque<MessageTask> {
+            return parent?.getBlockingQueue() ?: LinkedBlockingDeque<MessageTask>(MAX_TASK_COUNT)
+        }
+
         override fun newThread(runnale: Runnable?): Thread {
             return (parent?.newThread(runnale) ?: Thread(runnale)).apply {
                 val lastName = if (name.isNullOrEmpty()) {

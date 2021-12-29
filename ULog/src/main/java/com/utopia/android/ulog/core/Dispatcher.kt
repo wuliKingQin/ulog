@@ -2,8 +2,6 @@ package com.utopia.android.ulog.core
 
 import com.utopia.android.ulog.core.message.MessageTask
 import com.utopia.android.ulog.core.message.UMessage
-import com.utopia.android.ulog.print.file.FilePrinter
-import com.utopia.android.ulog.print.logcat.AndroidPrinter
 import java.lang.Exception
 
 

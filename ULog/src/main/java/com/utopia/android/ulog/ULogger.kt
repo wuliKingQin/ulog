@@ -47,7 +47,7 @@ internal class ULogger {
             this.config = config
             ConfigJobService.addService(config.configUpdater)
             UploadJobService.addService(config.fileUploader)
-            mPrintExecutor.threadFactory = config.threadFactory
+            mPrintExecutor.threadFactoryQueue = config.threadFactoryQueue
             initPrinters(config.printers, config.workers)
             // doc: 清除配置里面的
             (config.printers as? ArrayList)?.clear()
