@@ -79,9 +79,6 @@ val fileUploader = UploaderImpl(object :Uploader.UploadInfo{
         override fun getUniqueIdentity(): String {
                 return ""
         }
-        override fun getGrayIdentity(): String {
-                return ""
-        }
 })
 # 向配置中添加上传实现类
 val config = UConfig.Builder()
