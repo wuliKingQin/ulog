@@ -29,7 +29,7 @@ allprojects {
 ```
 dependencies {
     ...
-    implementation 'com.gitee.wuliKingQin:ulog:v0.0.1-beta'
+    implementation 'com.github.wuliKingQin:ulog:1.0.0'
 }
 ```
 
@@ -77,9 +77,6 @@ val fileUploader = UploaderImpl(object :Uploader.UploadInfo{
                 return ""
         }
         override fun getUniqueIdentity(): String {
-                return ""
-        }
-        override fun getGrayIdentity(): String {
                 return ""
         }
 })
