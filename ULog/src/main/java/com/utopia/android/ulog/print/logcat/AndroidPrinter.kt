@@ -28,12 +28,7 @@ class AndroidPrinter @JvmOverloads constructor(
 
     override fun print(message: UMessage) {
         val tag = getTag(message)
-        var content = messageFormat(message)
-        content = if (message.isWriteToFile) {
-            "[${message.tag}] $content"
-        } else {
-            content
-        }
+        val content = messageFormat(message)
         doPrint(message.level, tag, content)
     }
 
