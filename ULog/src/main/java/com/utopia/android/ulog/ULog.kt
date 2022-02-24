@@ -145,7 +145,15 @@ object ULog {
      * des: 获取是否处于debug模式
      * time: 2021/12/27 19:52
      */
-    internal fun isDebug(): Boolean {
+    fun isDebug(): Boolean {
         return mLogger.config?.isDebug ?: false
+    }
+
+    /**
+     * des: 获取日志缓存的目录文件
+     * time: 2022/2/7 10:50
+     */
+    internal fun getCacheDir(): String? {
+        return mLogger.config?.cacheLogDir
     }
 }

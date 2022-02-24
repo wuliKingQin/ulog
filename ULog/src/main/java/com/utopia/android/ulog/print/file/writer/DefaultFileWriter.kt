@@ -7,6 +7,8 @@ import java.io.*
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.charset.Charset
+import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * des: 日志库里面默认实现的文件写入器，该文件写入器采用的是java层FileChannel提供的map方法，
@@ -15,7 +17,7 @@ import java.nio.charset.Charset
  * author 秦王
  * time 2021/12/24 9:22
  */
-class DefaultFileWriter(
+class DefaultFileWriter @JvmOverloads constructor(
     private val fileReader: Writer.FileReady? = null,
     override var encryptor: Encryptor? = null
 ) : Writer {
@@ -47,38 +49,54 @@ class DefaultFileWriter(
             }
         }
     }
-
+    private var writeToFileHeadCount = 0
+    private var mHeadMessageQueue: LinkedList<String>? = null
     private var mCacheMapOperator: MemoryMapOperator? = null
     private var mLogFileMapOperator: MemoryMapOperator? = null
     private var mCacheFile: File? = null
     private var mLogFile: File? = null
     private var mLastLogFileNameMapOperator: MemoryMapOperator? = null
-
+    override var cacheDir: String? = null
     override fun open(file: File): Boolean {
         return try {
-            if (mCacheFile == null) {
-                mCacheFile = File(File(file.parent, TEMP_DIR), TEMP_CACHE_FILE_NAME)
-                mCacheFile.createNewFileOrDir()
-            }
-            if (mCacheMapOperator == null) {
-                mCacheMapOperator = MemoryMapOperator(
-                    mCacheFile,
-                    MAP_BUFFER_TOTAL_SIZE,
-                    false
-                )
-                flush()
-            }
+            cacheDir = file.parent
             if (mLogFile == null || mLogFile != file) {
                 mLogFile = file
             }
             val isNewFile = mLogFile.createNewFileOrDir()
+            val isFlush = checkCacheMapOperator()
             if (isNewFile) {
                 onNewFileCreated(file)
+            }
+            if (isFlush) {
+                flush()
             }
             true
         } catch (e: Exception) {
             false
         }
+    }
+
+    /**
+     * des: 初始化日志缓存map映射对象
+     * time: 2022/2/7 10:23
+     */
+    private fun checkCacheMapOperator(): Boolean {
+        cacheDir ?: return false
+        if (mCacheFile == null) {
+            mCacheFile = File(File(cacheDir, TEMP_DIR), TEMP_CACHE_FILE_NAME)
+            mCacheFile.createNewFileOrDir()
+        }
+        var isFlush = false
+        if (mCacheMapOperator == null) {
+            mCacheMapOperator = MemoryMapOperator(
+                mCacheFile,
+                MAP_BUFFER_TOTAL_SIZE,
+                false
+            )
+            isFlush = true
+        }
+        return isFlush
     }
 
     override fun isOpened(): Boolean {
@@ -94,6 +112,7 @@ class DefaultFileWriter(
     }
 
     override fun append(message: String) {
+        checkCacheMapOperator()
         val position = mCacheMapOperator?.getMapPosition() ?: 0
         if (position < MAP_BUFFER_TOTAL_SIZE / 3) {
             val isAppendSuccess = mCacheMapOperator?.append(message, encryptor) ?: false
@@ -105,47 +124,54 @@ class DefaultFileWriter(
         }
     }
 
+    override fun writeToFileHead(message: String) {
+        if (mHeadMessageQueue == null) {
+            mHeadMessageQueue = LinkedList()
+        }
+        if (writeToFileHeadCount <= 0) {
+            mHeadMessageQueue?.offerLast(message)
+        }
+        writeToFileHeadCount ++
+    }
+
+    /**
+     * des: 获取加密消息
+     * time: 2022/2/8 11:30
+     */
+    private fun getEncryptMessage(message: String?): ByteArray? {
+        message ?: return null
+        return getEncryptByteArray(message.toByteArray(
+            encryptor?.getCharset() ?: Charset.defaultCharset()
+        ), encryptor)
+    }
+
     /**
      * des: 将日志信息从缓存刷入到日志文件
      * time: 2021/12/24 13:49
      */
     private fun flush(message: String?) {
-        var putFailList: ArrayList<Byte>? = null
+        if (!isOpened()) return
+        val putFailList = ArrayList<Byte>()
         try {
-            mCacheMapOperator ?: return
-            val msgByteArray = message?.toByteArray(
-                encryptor?.getCharset() ?: Charset.defaultCharset()
-            )
+            val msgByteArray = getEncryptMessage(message)
             val msgByteArraySize = msgByteArray?.size ?: 0
             val lastPosition = mCacheMapOperator?.getLastPosition() ?: 0
             val flushSize = lastPosition + msgByteArraySize.toLong()
             if (flushSize <= 0) {
                 return
             }
-            mLogFileMapOperator = MemoryMapOperator(
-                mLogFile,
-                flushSize,
-                true
-            )
+            appendHeadMessage(flushSize, putFailList)
             if (lastPosition > 0) {
                 val isAppendSuccess = mLogFileMapOperator?.append(mCacheMapOperator) ?: false
                 if (!isAppendSuccess) {
                     val insertArray = mCacheMapOperator?.array()
                     if (insertArray != null) {
-                        putFailList = insertArray.toList() as ArrayList<Byte>
+                        putFailList.addAll(insertArray.toList())
                     }
                 }
             }
             if (msgByteArraySize > 0) {
-                val isAppendSuccess = mLogFileMapOperator?.append(msgByteArray!!, encryptor) ?: false
-                if (!isAppendSuccess) {
-                    val insertArray = msgByteArray!!.toList()
-                    if (putFailList == null) {
-                        putFailList = insertArray as ArrayList<Byte>
-                    } else {
-                        putFailList.addAll(insertArray)
-                    }
-                }
+                msgByteArray.appendLogFile(putFailList)
             }
             mLogFileMapOperator?.flush()
         } catch (e: Exception) {
@@ -159,6 +185,46 @@ class DefaultFileWriter(
             if (!putFailList.isNullOrEmpty()) {
                 putFailIoWrite(putFailList.toByteArray())
             }
+        }
+    }
+
+    /**
+     * des: 追加头部消息到日志文件
+     * time: 2022/2/8 11:44
+     */
+    private fun appendHeadMessage(flushSize: Long, putFailList: ArrayList<Byte>){
+        val isEmptyFile = MemoryMapOperator(mLogFile, 1).isEmptyFile()
+        if (!isEmptyFile || mHeadMessageQueue.isNullOrEmpty()) {
+            mLogFileMapOperator = MemoryMapOperator(
+                mLogFile,
+                flushSize,
+                true
+            )
+        } else {
+            val headMessage = mHeadMessageQueue?.pollFirst()
+            val headMsgByteArray = getEncryptMessage(headMessage)
+            val headMsgByteArraySize = headMsgByteArray?.size ?: 0
+            if (headMsgByteArraySize > 0) {
+                mLogFileMapOperator?.close()
+                mLogFileMapOperator = MemoryMapOperator(
+                    mLogFile,
+                    flushSize + headMsgByteArraySize
+                )
+                headMsgByteArray.appendLogFile(putFailList)
+            }
+        }
+    }
+
+    /**
+     * des: 将数据里面的内容追加到日志文件
+     * time: 2022/2/8 11:35
+     */
+    private fun ByteArray?.appendLogFile(putFailList: ArrayList<Byte>) {
+        this ?: return
+        val isAppendSuccess = mLogFileMapOperator?.append(this) ?: false
+        if (!isAppendSuccess) {
+            val insertArray = toList()
+            putFailList.addAll(insertArray)
         }
     }
 
@@ -199,6 +265,7 @@ class DefaultFileWriter(
 
     override fun onNewFileCreated(file: File) {
         fileReader?.onReady(this)
+        writeToFileHeadCount = 0
     }
 
     override fun getLastLogFileName(cacheDir: String?): String? {
@@ -309,7 +376,8 @@ class DefaultFileWriter(
             return append(
                 message.toByteArray(
                     encryptor?.getCharset() ?: Charset.defaultCharset()
-                )
+                ),
+                encryptor
             )
         }
 
@@ -366,6 +434,14 @@ class DefaultFileWriter(
                 )
             }
             return mMapBuffer
+        }
+
+        /**
+         * des: 判断是否不是空文件
+         * time: 2022/2/8 16:04
+         */
+        fun isEmptyFile(): Boolean {
+            return mMapBuffer?.get(0)?.toChar() == '\u0000'
         }
 
         /**
@@ -479,7 +555,6 @@ class DefaultFileWriter(
                     put(mClearBuffer)
                     flush()
                 } catch (e: Exception) {
-                    e.printStackTrace()
                 }
                 clear()
             }

@@ -15,6 +15,9 @@ interface Writer {
     // 将日志信息进行加密处理
     var encryptor: Encryptor?
 
+    // doc: 设置缓存目录
+    var cacheDir: String?
+
     /**
      * des: 打开一个指定的文件
      * time: 2021/11/18 9:58
@@ -44,6 +47,12 @@ interface Writer {
      * time: 2021/11/18 10:00
      */
     fun append(message: String)
+
+    /**
+     * des: 将关键信息写入文件的头部，创建一个文件，只能调用一次，多次调用无效
+     * time: 2022/2/8 11:06
+     */
+    fun writeToFileHead(message: String)
 
     /**
      * des: 关闭已经打开的文件

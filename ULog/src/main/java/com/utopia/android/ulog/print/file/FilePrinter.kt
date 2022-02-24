@@ -64,7 +64,7 @@ class FilePrinter constructor(): Printer{
             // doc: 排除事件消息
             return
         }
-        val writer = getWriter()
+        val writer = getWriter(message.config)
         if (message.type == UMessage.EVENT_FLUSH) {
             writer.flush()
             return
@@ -140,9 +140,11 @@ class FilePrinter constructor(): Printer{
      * des: 获取文件写入器
      * time: 2021/11/19 9:14
      */
-    private fun getWriter(): Writer {
+    private fun getWriter(config: UConfig?): Writer {
         return if (mWriter == null) {
-            mWriter = DefaultFileWriter()
+            mWriter = DefaultFileWriter().apply {
+                cacheDir = config?.cacheLogDir
+            }
             mWriter!!
         } else {
             mWriter!!
