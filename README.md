@@ -29,7 +29,7 @@ allprojects {
 ```
 dependencies {
     ...
-    implementation 'com.github.wuliKingQin:ulog:1.0.0'
+    implementation 'com.github.wuliKingQin:ulog:1.0.1'
 }
 ```
 
