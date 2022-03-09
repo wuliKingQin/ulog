@@ -144,3 +144,13 @@ val config = UConfig.Builder()
 ULog.startConfigUpdate("context上下文")
 ```
 5. 如果需要写入文件的日志进行加密, 可以自己实现Encryptor接口, 目前还没有实现默认的加密类.只是提供的接口.加密是对每一条日志进行的加密行为.
+
+
+#### 混淆配置：
+```
+-keep com.utopia.android.ulog.core.**{*;}
+-keep com.utopia.android.ulog.print.file.FilePrinter.**{*;}
+-keep com.utopia.android.ulog.print.logcat.AndroidPrinter.**{*;}
+-keep com.utopia.android.ulog.config.online.ConfigModel.**{*;}
+```
+
