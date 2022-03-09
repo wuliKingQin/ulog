@@ -2,6 +2,7 @@ package com.utopia.android.ulog.core
 
 import com.utopia.android.ulog.core.message.MessageTask
 import com.utopia.android.ulog.print.Printer
+import java.util.*
 import java.util.concurrent.BlockingQueue
 
 /**
@@ -22,6 +23,9 @@ interface Worker: Runnable, Executor {
 
     // doc: 任务阻塞队列
     val taskQueue: BlockingQueue<MessageTask>
+
+    // doc: 紧急任务，也就是当任务队列个数达到极限的时候，使用
+    val hotTaskQueue: Queue<MessageTask>
 
     /**
      * des: 用来将任务添加到任务队列中，待执行

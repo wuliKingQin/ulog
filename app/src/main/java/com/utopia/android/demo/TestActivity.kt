@@ -20,21 +20,21 @@ class TestActivity: AppCompatActivity(){
         }
         val executor = Executors.newCachedThreadPool()
         binding.testButton.setOnClickListener {
-//            executor.execute {
-//                for (index in 0 until 5) {
-//                    ULog.d(TAG, "index=${index} ========测试日志信息=========")
-//                }
-//            }
-//            executor.execute {
-//                for (index in 5 until 10) {
-//                    ULog.d(TAG, "index=${index} ========测试日志信息=========")
-//                }
-//            }
-//            executor.execute {
-//                for (index in 10 until 15) {
-//                    ULog.d(TAG, "index=${index} ========测试日志信息=========")
-//                }
-//            }
+            executor.execute {
+                for (index in 0 until 5) {
+                    ULog.d(TAG, "index=${index} ========测试日志信息=========")
+                }
+            }
+            executor.execute {
+                for (index in 5 until 10) {
+                    ULog.d(TAG, "index=${index} ========测试日志信息=========")
+                }
+            }
+            executor.execute {
+                for (index in 10 until 15) {
+                    ULog.d(TAG, "index=${index} ========测试日志信息=========")
+                }
+            }
             try {
                 1 / 0
             } catch (e: Exception) {

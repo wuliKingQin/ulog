@@ -5,6 +5,7 @@ import android.content.Intent
 import com.utopia.android.ulog.ULog
 import com.utopia.android.ulog.core.message.UMessage
 import com.utopia.android.ulog.extend.splitFileNameInDate
+import com.utopia.android.ulog.print.file.writer.Writer
 import com.utopia.android.ulog.service.JobService
 import com.utopia.android.ulog.tools.DateTool
 import java.io.File
@@ -64,9 +65,11 @@ internal class UploadJobService(
             val cacheDir = intent.getStringExtra(CACHE_LOG_DIR)
             if (!cacheDir.isNullOrEmpty()) {
                 isUploading = true
-                executeFlush()
+                executeFlush(true)
+                checkFlushFinish()
                 val cacheDirFile = File(cacheDir)
                 val logZipFile = logFilesZip(cacheDirFile, uploader)
+                executeFlush(false)
                 if (logZipFile != null) {
                     try {
                         val resultCallback = ResultCallbackImpl(
@@ -91,8 +94,29 @@ internal class UploadJobService(
      * des: 上传日志之前先将日志信息从映射区域flush一遍到日志文件里
      * time: 2021/12/27 11:24
      */
-    private fun executeFlush() {
-        ULog.postAsync("uploader send flush message", UMessage.EVENT_FLUSH)
+    private fun executeFlush(zipStatue: Boolean) {
+        ULog.postAsync(zipStatue, UMessage.EVENT_FLUSH)
+    }
+
+    /**
+     * des: 检查Flush日志到文件是否结束
+     * time: 2022/3/8 11:09
+     */
+    private fun checkFlushFinish() {
+        var waitCount = 0
+        while (true) {
+            try {
+                Thread.sleep(50)
+            } catch (e: Exception) {
+            }
+            if (!Writer.isFlushing) {
+                break
+            }
+            if (waitCount >= 5) {
+                break
+            }
+            waitCount += 1
+        }
     }
 
     /**

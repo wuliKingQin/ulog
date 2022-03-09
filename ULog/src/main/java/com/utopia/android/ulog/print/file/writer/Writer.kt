@@ -11,6 +11,12 @@ import java.io.File
  */
 interface Writer {
 
+    companion object {
+        // doc: 用于判断是否正在进行flush操作
+        @Volatile
+        var isFlushing = false
+    }
+
     // doc: 日志信息写入文件的时候，
     // 将日志信息进行加密处理
     var encryptor: Encryptor?
@@ -46,7 +52,13 @@ interface Writer {
      * des: 将日志内容通过该方法写入到文件中
      * time: 2021/11/18 10:00
      */
-    fun append(message: String)
+    fun append(message: String, isWriteTempCache: Boolean)
+
+    /**
+     * des: 刷入共享缓存
+     * time: 2022/3/3 19:17
+     */
+    fun flushMemoryMap()
 
     /**
      * des: 将关键信息写入文件的头部，创建一个文件，只能调用一次，多次调用无效

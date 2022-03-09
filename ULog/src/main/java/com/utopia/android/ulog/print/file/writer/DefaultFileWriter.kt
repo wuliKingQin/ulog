@@ -49,6 +49,12 @@ class DefaultFileWriter @JvmOverloads constructor(
             }
         }
     }
+
+    // doc: 临时缓存
+    private val mTempCacheList by lazy(LazyThreadSafetyMode.NONE) {
+        ArrayList<String>(128)
+    }
+
     private var writeToFileHeadCount = 0
     private var mHeadMessageQueue: LinkedList<String>? = null
     private var mCacheMapOperator: MemoryMapOperator? = null
@@ -68,7 +74,7 @@ class DefaultFileWriter @JvmOverloads constructor(
             if (isNewFile) {
                 onNewFileCreated(file)
             }
-            if (isFlush) {
+            if (isFlush || isNewFile) {
                 flush()
             }
             true
@@ -111,7 +117,39 @@ class DefaultFileWriter @JvmOverloads constructor(
         return if (mLogFile?.exists() == true) mLogFile?.name else null
     }
 
-    override fun append(message: String) {
+    override fun flushMemoryMap() {
+        // doc: 如果有缓存的，先把缓存的写入
+        if (mTempCacheList.isNotEmpty()) {
+            val tempList = ArrayList(mTempCacheList)
+            for (msg in tempList) {
+                writeToMemoryMap(msg)
+            }
+            mTempCacheList.clear()
+        }
+    }
+
+    override fun append(message: String, isWriteTempCache: Boolean) {
+        if (isWriteTempCache) {
+            writeToTempCache(message)
+        } else {
+            flushMemoryMap()
+            writeToMemoryMap(message)
+        }
+    }
+
+    /**
+     * des: 写到临时缓存
+     * time: 2022/3/3 18:39
+     */
+    private fun writeToTempCache(message: String) {
+        mTempCacheList.add(message)
+    }
+
+    /**
+     * des: 写入共享内存
+     * time: 2022/3/3 18:38
+     */
+    private fun writeToMemoryMap(message: String) {
         checkCacheMapOperator()
         val position = mCacheMapOperator?.getMapPosition() ?: 0
         if (position < MAP_BUFFER_TOTAL_SIZE / 3) {
@@ -125,11 +163,15 @@ class DefaultFileWriter @JvmOverloads constructor(
     }
 
     override fun writeToFileHead(message: String) {
-        if (mHeadMessageQueue == null) {
-            mHeadMessageQueue = LinkedList()
-        }
-        if (writeToFileHeadCount <= 0) {
-            mHeadMessageQueue?.offerLast(message)
+        if (mCacheMapOperator?.isEmptyFile() == true) {
+            append(message, false)
+        } else {
+            if (mHeadMessageQueue == null) {
+                mHeadMessageQueue = LinkedList()
+            }
+            if (writeToFileHeadCount <= 0) {
+                mHeadMessageQueue?.offerLast(message)
+            }
         }
         writeToFileHeadCount ++
     }
@@ -156,7 +198,12 @@ class DefaultFileWriter @JvmOverloads constructor(
             val msgByteArray = getEncryptMessage(message)
             val msgByteArraySize = msgByteArray?.size ?: 0
             val lastPosition = mCacheMapOperator?.getLastPosition() ?: 0
-            val flushSize = lastPosition + msgByteArraySize.toLong()
+            val lineSeparator = if (msgByteArraySize <= 0) {
+                UnmapTool.getLineSeparator().toByteArray()
+            } else {
+                null
+            }
+            val flushSize = lastPosition + msgByteArraySize.toLong() + (lineSeparator?.size ?: 0)
             if (flushSize <= 0) {
                 return
             }
@@ -172,6 +219,9 @@ class DefaultFileWriter @JvmOverloads constructor(
             }
             if (msgByteArraySize > 0) {
                 msgByteArray.appendLogFile(putFailList)
+            }
+            if (lineSeparator?.isNotEmpty() == true) {
+                lineSeparator.appendLogFile(putFailList)
             }
             mLogFileMapOperator?.flush()
         } catch (e: Exception) {
@@ -193,7 +243,7 @@ class DefaultFileWriter @JvmOverloads constructor(
      * time: 2022/2/8 11:44
      */
     private fun appendHeadMessage(flushSize: Long, putFailList: ArrayList<Byte>){
-        val isEmptyFile = MemoryMapOperator(mLogFile, 1).isEmptyFile()
+        val isEmptyFile = (mLogFile?.length() ?: 0) <= 0
         if (!isEmptyFile || mHeadMessageQueue.isNullOrEmpty()) {
             mLogFileMapOperator = MemoryMapOperator(
                 mLogFile,

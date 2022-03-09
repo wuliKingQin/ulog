@@ -8,6 +8,7 @@ import com.utopia.android.ulog.core.message.MessageTask
 import com.utopia.android.ulog.core.message.UMessage
 import com.utopia.android.ulog.print.Printer
 import java.lang.Exception
+import java.util.*
 import java.util.concurrent.BlockingDeque
 import java.util.concurrent.LinkedBlockingDeque
 
@@ -79,6 +80,10 @@ class PrintExecutor: Executor {
             threadFactoryQueue.getBlockingQueue()
         }
 
+        override val hotTaskQueue: Queue<MessageTask> by lazy {
+            LinkedList<MessageTask>()
+        }
+
         override val thread: Thread by lazy {
             threadFactoryQueue.newThread(this)
         }
@@ -98,7 +103,12 @@ class PrintExecutor: Executor {
             if (message.type == UMessage.LOG) {
                 taskQueue.offer(recordTask)
             } else {
-                taskQueue.offerFirst(recordTask)
+                val isOfferSuccess = taskQueue.offerFirst(recordTask)
+                if (!isOfferSuccess) {
+                    synchronized(printer) {
+                        hotTaskQueue.offer(recordTask)
+                    }
+                }
             }
         }
 
@@ -135,6 +145,14 @@ class PrintExecutor: Executor {
                     }
                     if (!isAlive) {
                         break
+                    }
+                    try {
+                        if (hotTaskQueue.isNotEmpty()) {
+                            // doc: 处理紧急任务
+                            task = hotTaskQueue.poll()
+                            continue
+                        }
+                    } catch (e: Exception) {
                     }
                     try {
                         task = taskQueue.take()

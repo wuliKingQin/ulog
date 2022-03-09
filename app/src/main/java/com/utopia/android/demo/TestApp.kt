@@ -23,7 +23,7 @@ class TestApp: Application(){
         super.onCreate()
         val fileWriter = DefaultFileWriter(object : Writer.FileReady {
             override fun onReady(writer: Writer) {
-                writer.append("==================head content==================\n")
+                writer.writeToFileHead("=========file head=========")
             }
         })
         val filePrinter = FilePrinter.Builder()

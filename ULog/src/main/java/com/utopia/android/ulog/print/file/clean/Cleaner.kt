@@ -1,6 +1,7 @@
 package com.utopia.android.ulog.print.file.clean
 
 import com.utopia.android.ulog.config.UConfig
+import com.utopia.android.ulog.config.online.ConfigModel
 import java.io.File
 
 /**
@@ -19,6 +20,9 @@ interface Cleaner {
         val cacheDirFile = File(cacheDir)
         var files = cacheDirFile.listFiles { file ->
             file.isFile && !file.name.endsWith(".zip")
+        }
+        if (!checkCleanCondition(files, config)) {
+            return
         }
         val result = onCleanBefore(config, cacheDirFile)
         if (!result.isNullOrEmpty()) {
@@ -40,6 +44,25 @@ interface Cleaner {
      */
     fun onCleanBefore(config: UConfig, cacheDirFile: File): Array<File>? {
         return null
+    }
+
+    /**
+     * des: 检测是否满足清除条件
+     * time: 2022/3/3 11:35
+     */
+    private fun checkCleanCondition(cacheFiles: Array<out File>?, config: UConfig): Boolean {
+        val thrValue = config.getMaxLogFolderSize() / config.getMaxLogFileSize()
+        return (cacheFiles?.size ?: 0) >= thrValue
+    }
+
+    private fun UConfig?.getMaxLogFolderSize(): Int {
+        this ?: return 0
+        return getOnlineConfig()?.getMaxCacheDirSize() ?: maxCacheDirSize
+    }
+
+    private fun UConfig?.getMaxLogFileSize(): Int {
+        this ?: return 0
+        return getOnlineConfig()?.getMaxLogFileSize() ?: maxLogFileSize
     }
 
     /**
