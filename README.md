@@ -29,7 +29,7 @@ allprojects {
 ```
 dependencies {
     ...
-    implementation 'com.github.wuliKingQin:ulog:1.0.0'
+    implementation 'com.github.wuliKingQin:ulog:1.0.1'
 }
 ```
 
@@ -50,7 +50,7 @@ ULog.init(this, config)
 ```
 val fileWriter = DefaultFileWriter(object : Writer.FileReady {
         override fun onReady(writer: Writer) {
-              writer.append("==================head content==================\n")
+              writer.writeToFileHead("==================head content==================\n")
         }
 })
 val filePrinter = FilePrinter.Builder()
