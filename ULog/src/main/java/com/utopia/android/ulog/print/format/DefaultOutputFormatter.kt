@@ -30,7 +30,7 @@ class DefaultOutputFormatter: Formatter<UMessage> {
 
     // doc: 异常格式化器
     private val throwableFormatter by lazy {
-        ThrowableFormatter(true, "", "", "")
+        ThrowableFormatter(true, "", "", "", "")
     }
 
     // doc: 日期格式化工具

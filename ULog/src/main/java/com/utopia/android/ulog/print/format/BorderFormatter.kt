@@ -47,6 +47,7 @@ class BorderFormatter: Formatter<Array<String?>>{
 
     private fun defaultHandle(segments: List<String?>, segmentSize: Int): String {
         mResultBuilder
+            .append("   ")
             .append(UnmapTool.getLineSeparator())
             .append(TOP_HORIZONTAL_BORDER)
             .append(UnmapTool.getLineSeparator())
