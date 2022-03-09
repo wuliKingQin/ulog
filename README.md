@@ -50,7 +50,7 @@ ULog.init(this, config)
 ```
 val fileWriter = DefaultFileWriter(object : Writer.FileReady {
         override fun onReady(writer: Writer) {
-              writer.append("==================head content==================\n")
+              writer.writeToFileHead("==================head content==================\n")
         }
 })
 val filePrinter = FilePrinter.Builder()
